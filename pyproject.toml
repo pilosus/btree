@@ -1,0 +1,16 @@
+[project]
+name = "btree"
+version = "0.1.0"
+description = "B-Tree algorithm implementation in Python"
+license-expression = "MIT"
+license-file = "LICENSE"
+readme = "README.md"
+authors = [
+    { name = "Vitaly Samigullin", email = "vrs@pilosus.org" }
+]
+requires-python = ">=3.11"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
