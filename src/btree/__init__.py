@@ -145,7 +145,7 @@ class BTree:
         elif not node.is_leaf:
             # If needed, fix a node with the shortage
             if len(node.children[position].keys) < self.degree:
-                self._fill_node_with_shortage(node, position)
+                position = self._fill_node_with_shortage(node, position)
             self._delete(node.children[position], key)
 
     def _delete_from_internal_node(self, node: Node, position: int) -> None:
@@ -166,9 +166,9 @@ class BTree:
             self._merge(node, position)
             self._delete(node.children[position], key)
 
-    def _fill_node_with_shortage(self, parent: Node, position: int) -> None:
+    def _fill_node_with_shortage(self, parent: Node, position: int) -> int:
         """
-        Balance the node so that it hast `degree` keys
+        Balance the node so that it has `degree` keys, return updated position.
         """
         if position > 0 and len(parent.children[position - 1].keys) >= self.degree:
             self._borrow_from_prev(parent, position)
@@ -178,10 +178,13 @@ class BTree:
         ):
             self._borrow_from_next(parent, position)
         else:
-            self._merge(
-                parent,
-                position if position < len(parent.children) - 1 else position - 1,
-            )
+            if position < len(parent.children) - 1:
+                self._merge(parent, position)
+            else:
+                self._merge(parent, position - 1)
+                position -= 1
+
+        return position
 
     def _merge(self, parent: Node, position: int) -> None:
         """
