@@ -1,11 +1,25 @@
 import typing
 
-
-# TODO improve
-ComparableT = typing.Any
+ComparableT = typing.TypeVar("ComparableT", bound="Comparable", contravariant=True)
 
 
-class Node:
+class Comparable(typing.Protocol[ComparableT]):
+    def __lt__(self, other: ComparableT) -> bool: ...
+    def __le__(self, other: ComparableT) -> bool: ...
+    def __gt__(self, other: ComparableT) -> bool: ...
+    def __ge__(self, other: ComparableT) -> bool: ...
+
+
+class Node(typing.Generic[ComparableT]):
+    """
+    A node in the BTree.
+    Can be either a root node, an internal node or a leaf node.
+
+    Type hints:
+    use class type for generic Node like this:
+    >>> n: Node[int] = Node()
+    """
+
     def __init__(self, is_leaf: bool = True):
         self.keys: list[ComparableT] = []
         self.children: list[Node] = []
@@ -17,7 +31,7 @@ class Node:
         return f"<Node {self.keys}>"
 
 
-class BTree:
+class BTree(typing.Generic[ComparableT]):
     def __init__(self, degree: int):
         """
         Tree initialisation.
@@ -26,6 +40,13 @@ class BTree:
           - Every internal node must have between (degree - 1) and (2 * degree - 1) keys
           - A root node can have fewer as (degree - 1) keys, but at least 1
           - An internal node must have between (degree) and (2 * degree) children
+
+        Type hinting:
+        use class type for generic BTree like this:
+        >>> b_int: BTree[int] = BTree(degree=2)
+        >>> b_int.insert(1)
+        >>> b_str: BTree[str] = BTree(degree=2)
+        >>> b_str.insert("a")
         """
         assert degree >= 2, "Minimum degree of the BTree must be at least 2"
         self.degree: int = degree
@@ -66,7 +87,7 @@ class BTree:
         if self.is_node_full(self.root):
             # If a node contains more than 2 * degree - 1 keys, it must be split.
             # The tree's height is increased by 1 in this case.
-            new_root = Node(is_leaf=False)
+            new_root: Node = Node(is_leaf=False)
             new_root.children.append(self.root)
             # Split the old root into two nodes and move the middle key up to the new root.
             self._split_child(parent=new_root, position=0)
@@ -109,7 +130,7 @@ class BTree:
         Split a full child of the parent node at the given position.
         """
         child = parent.children[position]
-        new_child = Node(is_leaf=child.is_leaf)
+        new_child: Node = Node(is_leaf=child.is_leaf)
 
         # A full node has 2 * degree - 1 keys, so the position at (degree - 1) is the middle one.
         # Move the middle key from the child to the parent.
@@ -230,7 +251,7 @@ class BTree:
             child.children.append(sibling.children.pop(0))
         parent.keys[position] = sibling.keys.pop(0)
 
-    def _get_predecessor_key(self, node: Node) -> ComparableT:
+    def _get_predecessor_key(self, node: Node):
         # Predecessor is the largest key in the left subtree
         while not node.is_leaf:
             node = node.children[-1]
