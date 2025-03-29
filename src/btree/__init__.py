@@ -12,6 +12,8 @@ class Node:
         self.is_leaf: bool = is_leaf
 
     def __repr__(self) -> str:
+        if self.is_leaf:
+            return f"<LeafNode {self.keys}>"
         return f"<Node {self.keys}>"
 
 
@@ -20,13 +22,14 @@ class BTree:
         """
         Tree initialisation.
 
-        :param degree: a **minimum** degree of the tree, i.e. the following mush hold tru:
-          - Every internal node must between (degree - 1) and (2 * degree - 1) keys
-          - A root node can have fewer as (degree - 1) keys
-          - An internal node has between (degree) and (2 * degree) children
+        :param degree: a **minimum** degree of the tree, i.e. the following must hold true:
+          - Every internal node must have between (degree - 1) and (2 * degree - 1) keys
+          - A root node can have fewer as (degree - 1) keys, but at least 1
+          - An internal node must have between (degree) and (2 * degree) children
         """
-        self.root: Node = Node()
+        assert degree >= 2, "Minimum degree of the BTree must be at least 2"
         self.degree: int = degree
+        self.root: Node = Node()
 
     def _search(self, key: ComparableT, node: Node) -> tuple[Node, int] | None:
         # Find position of the last key that is less or equal to the target key
@@ -53,11 +56,14 @@ class BTree:
         """
         return self._search(key=key, node=self.root)
 
+    def is_node_full(self, node: Node) -> bool:
+        return len(node.keys) >= (2 * self.degree) - 1
+
     def insert(self, key: ComparableT) -> None:
         """
         Insert a given key into the tree.
         """
-        if len(self.root.keys) >= (2 * self.degree) - 1:
+        if self.is_node_full(self.root):
             # If a node contains more than 2 * degree - 1 keys, it must be split.
             # The tree's height is increased by 1 in this case.
             new_root = Node(is_leaf=False)
@@ -92,7 +98,7 @@ class BTree:
 
             # If the found child is full, split it before inserting.
             # Split will also update the parent and move the middle key up.
-            if len(node.children[position].keys) == (2 * self.degree) - 1:
+            if self.is_node_full(node.children[position]):
                 self._split_child(node, position)
                 if key > node.keys[position]:
                     position += 1
@@ -236,14 +242,15 @@ class BTree:
             node = node.children[0]
         return node.keys[0]
 
-    # TODO improve?
-    def print(self, node: Node | None = None, level: int = 0) -> None:
+    def _walk_tree(self, node: Node, level: int = 0, result: str = "") -> str:
         """
-        Visualize the tree
+        Return a string representation of the tree starting from the given node.
         """
-        if node is None:
-            node = self.root
-
-        print("  " * level, node)
+        offset = "  " * level
+        result += f"{offset}{node}\n"
         for child in node.children:
-            self.print(child, level + 1)
+            result = self._walk_tree(child, level + 1, result)
+        return result
+
+    def __repr__(self) -> str:
+        return self._walk_tree(node=self.root)

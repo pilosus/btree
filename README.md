@@ -1,7 +1,5 @@
 # B-Tree Algorithm Implementation in Python
 
-**NB!** The implementation has not been tested properly, use at your own risk!
-
 See [wiki](https://en.wikipedia.org/wiki/B-tree).
 
 
@@ -24,17 +22,15 @@ b = btree.BTree(degree=2)
 for i in range(10):
     b.insert(i)
     
-b.print()
+print(b)
 b.search(9)
 b.delete(7)
-b.print()
+print(b)
 ```
 
 
 ## Development
 
 ```bash
-uv run mypy src/
-uv run ruff format
-uv run ruff check
+make
 ```
