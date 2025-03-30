@@ -1,6 +1,10 @@
 # B-Tree Algorithm Implementation in Python
 
-See [wiki](https://en.wikipedia.org/wiki/B-tree).
+The implementation of the B-Tree data structure and its adjacent algorithms for insertion, deletion, and searching
+follows the description from the following source:
+
+Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and Clifford Stein. 2009. Introduction to Algorithms,
+Third Edition (3rd. ed.). The MIT Press. Chapter 18, pp. 484-504.
 
 
 ## Usage

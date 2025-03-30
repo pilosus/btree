@@ -1,3 +1,13 @@
+"""
+The implementation of the B-Tree data structure and its
+adjacent algorithms for insertion, deletion, and searching
+follows the description from the following source:
+
+Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and Clifford Stein.
+2009. Introduction to Algorithms, Third Edition (3rd. ed.). The MIT Press.
+Chapter 18, pp. 484-504.
+"""
+
 import typing
 
 ComparableT = typing.TypeVar("ComparableT", bound="Comparable", contravariant=True)
@@ -53,7 +63,7 @@ class BTree(typing.Generic[ComparableT]):
         self.root: Node = Node()
 
     def _search(self, key: ComparableT, node: Node) -> tuple[Node, int] | None:
-        # Find position of the last key that is less or equal to the target key
+        # Find the smallest index of the key that is less or equal to the target key
         position = 0
         while position < len(node.keys) and key > node.keys[position]:
             position += 1
@@ -78,14 +88,14 @@ class BTree(typing.Generic[ComparableT]):
         return self._search(key=key, node=self.root)
 
     def is_node_full(self, node: Node) -> bool:
-        return len(node.keys) >= (2 * self.degree) - 1
+        return len(node.keys) == (2 * self.degree) - 1
 
     def insert(self, key: ComparableT) -> None:
         """
         Insert a given key into the tree.
         """
         if self.is_node_full(self.root):
-            # If a node contains more than 2 * degree - 1 keys, it must be split.
+            # If a node is full, it must be split.
             # The tree's height is increased by 1 in this case.
             new_root: Node = Node(is_leaf=False)
             new_root.children.append(self.root)
@@ -97,7 +107,7 @@ class BTree(typing.Generic[ComparableT]):
 
     def _insert_into_non_full_node(self, node: Node, key: ComparableT) -> None:
         """
-        Insert a key into a node that is guaranteed to be not full
+        Insert a key into a node that is guaranteed to be non-full
         """
         # Starting at the last key of the node
         position = len(node.keys) - 1
@@ -122,6 +132,8 @@ class BTree(typing.Generic[ComparableT]):
             if self.is_node_full(node.children[position]):
                 self._split_child(node, position)
                 if key > node.keys[position]:
+                    # This guarantees that the recursion below never descents to the full node,
+                    # so the algorithm terminates.
                     position += 1
             self._insert_into_non_full_node(node.children[position], key)
 
@@ -132,20 +144,21 @@ class BTree(typing.Generic[ComparableT]):
         child = parent.children[position]
         new_child: Node = Node(is_leaf=child.is_leaf)
 
-        # A full node has 2 * degree - 1 keys, so the position at (degree - 1) is the middle one.
+        # A full node has (2 * degree - 1) keys,
+        # so the position at (degree - 1) is the middle one.
         # Move the middle key from the child to the parent.
         parent.keys.insert(position, child.keys[self.degree - 1])
         parent.children.insert(position + 1, new_child)
 
-        # Split the keys and children between the old and new child nodes
-        # Last (degree - 1) keys go to the new child
+        # Split the keys and children between the old and new child nodes.
+        # Last (degree - 1) keys go to the new child.
         new_child.keys = child.keys[self.degree :]
-        # First (degree - 1) keys remain in the old child
+        # First (degree - 1) keys remain in the old child.
         child.keys = child.keys[: self.degree - 1]
 
-        # If the node is an internal node, its children are also split between the two new nodes.
+        # If the node is an internal node, its (2 * degree) children
+        # are also split between the two new nodes.
         if not child.is_leaf:
-            # Move the half of the children
             new_child.children = child.children[self.degree :]
             child.children = child.children[: self.degree]
 
